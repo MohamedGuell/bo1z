@@ -49,6 +49,10 @@ export const map = MAPS[mapId];
 // Same pack root and OPFS namespace as the map; its manifest is the map's plus the mods' small boot files
 // (pack/web-manifest-horde.json), so a player who has the map fetches only those. Maps without horde: true ignore it.
 const query = new URLSearchParams(globalThis.location?.search ?? '');
+const PACK_ORIGIN = 'https://cdn.vel.gg';
+const PACK_ORIGIN_FOR = 'https://vel.gg';
+const userProxy = query.get('proxy') || query.get('packOrigin') || (typeof localStorage !== 'undefined' ? localStorage.getItem('bo1z_proxy') : null);
+
 const requestedMode = globalThis.document?.documentElement?.dataset.mode ?? query.get('mode') ??
   (query.get('horde') === '1' ? 'horde' : null);
 export const horde = requestedMode === 'horde' && !!map.horde;
@@ -61,7 +65,6 @@ export const manifestUrl = horde ? packBase + 'web-manifest-horde.json' : (userP
 // only on a loopback page (local tests). Integrity does not depend on the origin: every file is SHA-256-checked.
 // cdn.vel.gg allows only the https://vel.gg origin (bucket CORS + the "cdn cors" Transform Rule), so other origins (local
 // tests, workers.dev) keep the Worker unless a loopback page asks for ?packOrigin=<origin>.
-const userProxy = query.get('proxy') || query.get('packOrigin') || (typeof localStorage !== 'undefined' ? localStorage.getItem('bo1z_proxy') : null);
 const loopback = ['127.0.0.1', 'localhost', '[::1]'].includes(globalThis.location?.hostname);
 const packOrigin = query.get('packOrigin') === '0' ? ''
   : userProxy ? userProxy.replace(/\/+$/, '')

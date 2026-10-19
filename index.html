@@ -52,20 +52,48 @@
   <main class="stage">
     <img src="art/mapselect-supported.webp" alt="Zombies map selection"><!-- rows unfocused; landing.js focuses Kino, as the game opens -->
   </main>
-  <button id="proxy-btn" style="position:fixed; bottom:12px; right:12px; z-index:9999; background:rgba(0,0,0,0.75); color:#ddd; border:1px solid #555; border-radius:6px; padding:6px 12px; font-size:12px; cursor:pointer; font-family:sans-serif;" onclick="configureProxy()">⚙️ Configurer Proxy (Bureau)</button>
+  <button id="proxy-btn" style="position:fixed; bottom:12px; right:12px; z-index:9999; background:rgba(0,0,0,0.75); color:#ddd; border:1px solid #555; border-radius:6px; padding:6px 12px; font-size:12px; cursor:pointer; font-family:sans-serif;" onclick="openProxyModal()">⚙️ Configurer Proxy (Bureau)</button>
+  
+  <div id="proxy-modal" style="display:none; position:fixed; inset:0; z-index:999999; background:rgba(0,0,0,0.85); align-items:center; justify-content:center; font-family:sans-serif; padding:16px; box-sizing:border-box;">
+    <div style="background:#1e1e1e; border:1px solid #444; border-radius:12px; padding:24px; max-width:480px; width:100%; color:#eee; box-shadow:0 8px 32px rgba(0,0,0,0.8); box-sizing:border-box;">
+      <h3 style="margin-top:0; color:#fff; font-size:18px;">⚙️ Configuration du Proxy (Bureau)</h3>
+      <p style="font-size:13px; color:#aaa; line-height:1.4; margin-bottom:12px;">
+        Entrez l'URL de votre proxy Cloudflare Worker pour contourner le blocage du bureau et l'erreur 404 :
+      </p>
+      <input type="text" id="proxy-modal-input" placeholder="https://bo1z-proxy.mon-compte.workers.dev" style="width:100%; box-sizing:border-box; padding:10px 12px; background:#111; border:1px solid #555; border-radius:6px; color:#fff; font-size:14px; margin-bottom:16px; outline:none;">
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button type="button" onclick="closeProxyModal()" style="background:#333; color:#ccc; border:none; border-radius:6px; padding:8px 16px; cursor:pointer; font-size:14px;">Annuler</button>
+        <button type="button" onclick="saveProxyModal()" style="background:#e50914; color:#fff; border:none; border-radius:6px; padding:8px 16px; font-weight:bold; cursor:pointer; font-size:14px;">Enregistrer & Recharger</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    function configureProxy() {
-      const current = localStorage.getItem('bo1z_proxy') || '';
-      const input = prompt("Entrez l'URL de votre proxy Cloudflare Worker (ex: https://bo1z-proxy.mon-compte.workers.dev) pour débloquer le téléchargement au bureau :", current);
-      if (input !== null) {
-        if (input.trim()) {
-          localStorage.setItem('bo1z_proxy', input.trim().replace(/\/+$/, ''));
-          alert("Proxy configuré : " + input.trim());
+    function openProxyModal() {
+      const modal = document.getElementById('proxy-modal');
+      const input = document.getElementById('proxy-modal-input');
+      if (modal && input) {
+        input.value = localStorage.getItem('bo1z_proxy') || '';
+        modal.style.display = 'flex';
+        input.focus();
+      }
+    }
+    function closeProxyModal() {
+      const modal = document.getElementById('proxy-modal');
+      if (modal) modal.style.display = 'none';
+    }
+    function saveProxyModal() {
+      const input = document.getElementById('proxy-modal-input');
+      if (input) {
+        const val = String(input.value || '').trim();
+        if (val) {
+          localStorage.setItem('bo1z_proxy', val.replace(/\/+$/, ''));
         } else {
           localStorage.removeItem('bo1z_proxy');
-          alert("Proxy réinitialisé.");
         }
       }
+      closeProxyModal();
+      location.reload();
     }
   </script>
 </body>

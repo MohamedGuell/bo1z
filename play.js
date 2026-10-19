@@ -161,20 +161,49 @@ function errorScreen(kind, message) {
     button('Continue', () => { permissionToEvict = true; begin(); });
   } else if (kind === 'download') {
     button('Resume', () => cacheStatus ? begin() : inspect());
-    button('Proxy Settings', () => {
-      const current = localStorage.getItem('bo1z_proxy') || '';
-      const input = prompt("Entrez l'URL de votre proxy Cloudflare Worker (ex: https://bo1z-proxy.mon-compte.workers.dev) pour contourner le blocage du bureau et télécharger les fichiers du jeu :", current);
-      if (input !== null) {
-        if (input.trim()) {
-          localStorage.setItem('bo1z_proxy', input.trim().replace(/\/+$/, ''));
-        } else {
-          localStorage.removeItem('bo1z_proxy');
-        }
-        location.reload();
-      }
-    }, true);
+    button('Proxy Settings', openProxyModal, true);
   } else if (kind === 'quota') button('Try again', begin);
   else button('Reload', reload);
+}
+
+function openProxyModal() {
+  let modal = document.getElementById('proxy-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'proxy-modal';
+    modal.style.cssText = 'display:flex; position:fixed; inset:0; z-index:999999; background:rgba(0,0,0,0.85); align-items:center; justify-content:center; font-family:sans-serif; padding:16px; box-sizing:border-box;';
+    modal.innerHTML = `
+      <div style="background:#1e1e1e; border:1px solid #444; border-radius:12px; padding:24px; max-width:480px; width:100%; color:#eee; box-shadow:0 8px 32px rgba(0,0,0,0.8); box-sizing:border-box;">
+        <h3 style="margin-top:0; color:#fff; font-size:18px;">⚙️ Configuration du Proxy (Bureau)</h3>
+        <p style="font-size:13px; color:#aaa; line-height:1.4; margin-bottom:12px;">
+          Entrez l'URL de votre proxy Cloudflare Worker pour contourner le blocage du bureau et l'erreur 404 :
+        </p>
+        <input type="text" id="proxy-modal-input" placeholder="https://bo1z-proxy.mon-compte.workers.dev" style="width:100%; box-sizing:border-box; padding:10px 12px; background:#111; border:1px solid #555; border-radius:6px; color:#fff; font-size:14px; margin-bottom:16px; outline:none;">
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button type="button" id="proxy-modal-cancel" style="background:#333; color:#ccc; border:none; border-radius:6px; padding:8px 16px; cursor:pointer; font-size:14px;">Annuler</button>
+          <button type="button" id="proxy-modal-save" style="background:#e50914; color:#fff; border:none; border-radius:6px; padding:8px 16px; font-weight:bold; cursor:pointer; font-size:14px;">Enregistrer & Recharger</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector('#proxy-modal-cancel').onclick = () => { modal.style.display = 'none'; };
+    modal.querySelector('#proxy-modal-save').onclick = () => {
+      const inputEl = modal.querySelector('#proxy-modal-input');
+      const val = inputEl ? String(inputEl.value || '').trim() : '';
+      if (val) {
+        localStorage.setItem('bo1z_proxy', val.replace(/\/+$/, ''));
+      } else {
+        localStorage.removeItem('bo1z_proxy');
+      }
+      modal.style.display = 'none';
+      leaveGuard.leave();
+      location.reload();
+    };
+  }
+  const input = modal.querySelector('#proxy-modal-input');
+  if (input) input.value = localStorage.getItem('bo1z_proxy') || '';
+  modal.style.display = 'flex';
+  if (input) input.focus();
 }
 function setBar(id, fraction) {
   if (fraction === null) $(id).removeAttribute('value');

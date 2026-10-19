@@ -159,9 +159,21 @@ function errorScreen(kind, message) {
   $('error-message').textContent = message; $('error-message').hidden = false;
   if (kind === 'persistence') {
     button('Continue', () => { permissionToEvict = true; begin(); });
-    button('Try again', begin, true);
-  } else if (kind === 'download') button('Resume', () => cacheStatus ? begin() : inspect());
-  else if (kind === 'quota') button('Try again', begin);
+  } else if (kind === 'download') {
+    button('Resume', () => cacheStatus ? begin() : inspect());
+    button('Proxy Settings', () => {
+      const current = localStorage.getItem('bo1z_proxy') || '';
+      const input = prompt("Entrez l'URL de votre proxy Cloudflare Worker (ex: https://bo1z-proxy.mon-compte.workers.dev) pour contourner le blocage du bureau et télécharger les fichiers du jeu :", current);
+      if (input !== null) {
+        if (input.trim()) {
+          localStorage.setItem('bo1z_proxy', input.trim().replace(/\/+$/, ''));
+        } else {
+          localStorage.removeItem('bo1z_proxy');
+        }
+        location.reload();
+      }
+    }, true);
+  } else if (kind === 'quota') button('Try again', begin);
   else button('Reload', reload);
 }
 function setBar(id, fraction) {
@@ -596,11 +608,12 @@ function downloadError(message, name) {
   }
   const kind = name === 'QuotaExceededError' ? 'quota' : /SecurityError|NotAllowedError/.test(name) ? 'storage' : 'download';
   if (barRun) { clearInterval(barRun.timer); barRun = null; }
-  // verifyfix: OPFS read/write failures are local storage trouble, not the connection.
+  const isNetworkBlock = /HTTP 404|Failed to fetch|NetworkError/i.test(message);
+  const hint = isNetworkBlock ? '\n\n[Réseau Bureau] : Les serveurs de vel.gg sont bloqués par le pare-feu du bureau ou par CORS. Cliquez sur "Proxy Settings" pour configurer votre proxy.' : '';
   errorScreen(kind, kind === 'quota' ? 'Browser storage is full. Free disk space or remove unused site data in your browser settings, then retry. Saved partial files will resume.'
     : kind === 'storage' ? 'Allow this site to save files in your browser settings, then reload.'
     : /^OPFS /.test(message) ? `${message}\nYour browser could not read or write the saved game files. Close other tabs of this site, free some disk space and retry. If it happens again, clear this site's data (the icon left of the address, then Site settings, Delete data) and retry.`
-    : `${message}\nCheck your connection and retry. Saved partial files will resume.`);
+    : `${message}\nCheck your connection and retry. Saved partial files will resume.${hint}`);
 }
 function inspect() {
   screen('landing', ''); play.textContent = 'Loading'; play.hidden = false; play.disabled = true;

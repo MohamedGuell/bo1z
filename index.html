@@ -52,5 +52,21 @@
   <main class="stage">
     <img src="art/mapselect-supported.webp" alt="Zombies map selection"><!-- rows unfocused; landing.js focuses Kino, as the game opens -->
   </main>
+  <button id="proxy-btn" style="position:fixed; bottom:12px; right:12px; z-index:9999; background:rgba(0,0,0,0.75); color:#ddd; border:1px solid #555; border-radius:6px; padding:6px 12px; font-size:12px; cursor:pointer; font-family:sans-serif;" onclick="configureProxy()">⚙️ Configurer Proxy (Bureau)</button>
+  <script>
+    function configureProxy() {
+      const current = localStorage.getItem('bo1z_proxy') || '';
+      const input = prompt("Entrez l'URL de votre proxy Cloudflare Worker (ex: https://bo1z-proxy.mon-compte.workers.dev) pour débloquer le téléchargement au bureau :", current);
+      if (input !== null) {
+        if (input.trim()) {
+          localStorage.setItem('bo1z_proxy', input.trim().replace(/\/+$/, ''));
+          alert("Proxy configuré : " + input.trim());
+        } else {
+          localStorage.removeItem('bo1z_proxy');
+          alert("Proxy réinitialisé.");
+        }
+      }
+    }
+  </script>
 </body>
 </html>
